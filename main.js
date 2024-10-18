@@ -34,9 +34,9 @@ app.post('/inbound-webhook', async (req, res) => {
     try {
         // Trigger a Bland.AI call to the provided phone number
         const lead = { phone: phoneNumber, name: name, email: email };
-        await initiateOutboundCall(lead);
+        const result = await initiateOutboundCall(lead);
 
-        res.status(200).json({ message: 'Call triggered successfully' });
+        res.status(200).json({ message: result });
     } catch (error) {
         console.error('Error triggering the call:', error);
         res.status(500).json({ message: 'Failed to trigger the call' });
@@ -98,27 +98,29 @@ async function initiateOutboundCall(lead, retries = 1) {
                 },
             });
 
-            const { status, username, domain } = response.data;
+            return response.data;
 
-            // Check if username and domain are present
-            if (!username || !domain) {
-                console.error("Error: Missing username or domain in the response:", response.data);
-                throw new Error("Username or domain is undefined.");
-            }
+            //const { status, username, domain } = response.data;
 
-            console.log("Phone call dispatched successfully");
+            // // Check if username and domain are present
+            // if (!username || !domain) {
+            //     console.error("Error: Missing username or domain in the response:", response.data);
+            //     throw new Error("Username or domain is undefined.");
+            // }
 
-            const recognizedEmail = `${username}@${domain}`;
-            if (!validateEmail(recognizedEmail)) {
-                console.log(`Invalid email recognized: ${recognizedEmail}. Asking user to confirm.`);
-                await sendEmailConfirmationSMS(lead, 'It seems we couldn’t capture your email. Please confirm your email using the link.');
-            } else {
-                console.log(`Successfully recognized email: ${recognizedEmail}`);
-                lead.email = recognizedEmail;
-                await sendConfirmationEmail(lead.email, new Date());
-                await sendReminderSMS(lead.phone, `Your confirmed email is: ${lead.email}`);
-            }
-            return;
+            // console.log("Phone call dispatched successfully");
+
+            // const recognizedEmail = `${username}@${domain}`;
+            // if (!validateEmail(recognizedEmail)) {
+            //     console.log(`Invalid email recognized: ${recognizedEmail}. Asking user to confirm.`);
+            //     await sendEmailConfirmationSMS(lead, 'It seems we couldn’t capture your email. Please confirm your email using the link.');
+            // } else {
+            //     console.log(`Successfully recognized email: ${recognizedEmail}`);
+            //     lead.email = recognizedEmail;
+            //     await sendConfirmationEmail(lead.email, new Date());
+            //     await sendReminderSMS(lead.phone, `Your confirmed email is: ${lead.email}`);
+            // }
+            // return;
         } catch (error) {
             console.error("Error dispatching phone call:", error.response?.data || error.message);
             retries--;
