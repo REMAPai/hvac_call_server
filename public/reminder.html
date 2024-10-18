@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send a Reminder</title>
+</head>
+<body>
+    <h1>Send a Reminder</h1>
+    <form action="http://localhost:3000/check-conditions" method="POST">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="userData[name]" required><br><br>
+
+        <label for="phone">Phone:</label>
+        <input type="text" id="phone" name="userData[phone]" required><br><br>
+
+        <label for="callOption">Trigger Outbound Call:</label>
+        <input type="checkbox" id="callOption" name="conditionType" value="call"><br><br>
+
+        <input type="hidden" name="conditionType" value="reminder">
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
