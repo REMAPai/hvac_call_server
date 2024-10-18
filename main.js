@@ -8,9 +8,9 @@ const axios = require('axios');
 require('dotenv').config();
 
 // Twilio credentials
-const accountSid = process.env.TWILIO_ACCOUNT_SID; // Use your .env variable
-const authToken = process.env.TWILIO_AUTH_TOKEN; // Use your .env variable
-const client = twilio(accountSid, authToken);
+// const accountSid = process.env.TWILIO_ACCOUNT_SID; // Use your .env variable
+// const authToken = process.env.TWILIO_AUTH_TOKEN; // Use your .env variable
+// const client = twilio(accountSid, authToken);
 
 // Bland.ai credentials (replace with your actual Bland.ai API key)
 const blandApiKey = process.env.BLAND_API_KEY; // Use your .env variable
@@ -186,7 +186,7 @@ async function sendEmailConfirmationSMS(lead, message) {
     const smsMessage = `${message} Click here to confirm your email: ${confirmationLink}`;
     
     try {
-        await sendReminderSMS(lead.phone, smsMessage);
+        //await sendReminderSMS(lead.phone, smsMessage);
         console.log('SMS for email confirmation sent successfully.');
     } catch (error) {
         console.error('Error sending SMS for email confirmation:', error);
@@ -194,16 +194,16 @@ async function sendEmailConfirmationSMS(lead, message) {
 }
 
 // Function to send an SMS reminder using Twilio
-function sendReminderSMS(toPhone, message) {
-    client.messages
-        .create({
-            body: message,
-            from: '+61483957967', // Twilio number
-            to: toPhone
-        })
-        .then(message => console.log('Reminder SMS sent:', message.sid))
-        .catch(error => console.error('Error sending SMS:', error));
-}
+// function sendReminderSMS(toPhone, message) {
+//     client.messages
+//         .create({
+//             body: message,
+//             from: '+61483957967', // Twilio number
+//             to: toPhone
+//         })
+//         .then(message => console.log('Reminder SMS sent:', message.sid))
+//         .catch(error => console.error('Error sending SMS:', error));
+// }
 
 // Helper function to validate email format
 function validateEmail(email) {
