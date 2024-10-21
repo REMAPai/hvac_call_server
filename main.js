@@ -10,8 +10,8 @@ require('dotenv').config();
 const blandApiKey = process.env.BLAND_API_KEY; // Use your .env variable
 
 const app = express();
-const port = process.env.PORT || 3091; // Ensure the port can be set via environment variables
 
+// Middleware setup
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -174,6 +174,6 @@ async function sendCallDetailsToGHL(ghlData) {
 }
 
 // Start the Express server
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+app.listen(process.env.PORT || 80, () => {
+    console.log(`Server running...`); 
 });
