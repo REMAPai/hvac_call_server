@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const path = require('path');
 const axios = require('axios');
 
 // Load environment variables from .env file
@@ -9,12 +10,13 @@ require('dotenv').config();
 const blandApiKey = process.env.BLAND_API_KEY; // Use your .env variable
 
 const app = express();
-const port = 3091;
+const port = process.env.PORT || 3091; // Ensure the port can be set via environment variables
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Webhook handler
+// Inbound and Outbound Webhook handler
 app.post('/webhook', async (req, res) => {
     const { webhookType, data } = req.body;
 
@@ -32,8 +34,7 @@ app.post('/webhook', async (req, res) => {
         }
         // Handle outbound webhook
         else if (webhookType === 'outbound') {
-            const filteredData = await handleOutboundWebhook(data);
-            responseMessage = filteredData;
+            responseMessage = await handleOutboundWebhook(data);
         } else {
             return res.status(400).json({ message: 'Invalid webhookType' });
         }
@@ -72,12 +73,12 @@ async function handleOutboundWebhook(data) {
     // Get call details from Bland.AI using the call ID
     const callDetails = await getCallDetails(callId);
 
-    // Structure filtered data to send to GHL
+    // Structure filtered data to send to the endpoint
     const filteredData = {
         call_id: callDetails.call_id,
         call_to: callDetails.to,
         call_from: callDetails.from,
-        call_tag: callDetails.status,  // e.g., answered, no answer
+        call_tag: callDetails.status, // e.g., answered, no answer
         call_status: callDetails.status,
         call_duration: callDetails.call_length,
         call_transcript: callDetails.concatenated_transcript,
