@@ -173,11 +173,12 @@ async function sendCallDetailsToGHL(ghlData) {
     }
 }
 
-// Start the Express server
+//Start the Express server
 // app.listen(process.env.PORT || 3091, () => {
 //     console.log(`Server running...`); 
 // });
 
-app.listen(3091, () => {
-    console.log(`Server running...`); 
+const port = process.env.PORT || 3091;
+app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
 });
