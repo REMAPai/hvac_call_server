@@ -10,9 +10,12 @@ const blandApiKey = process.env.BLAND_API_KEY; // Use your .env variable
 
 const app = express();
 
+app.use(express.json());
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 // Inbound and Outbound Webhook handler (POST)
 app.post('/webhook', async (req, res) => {
@@ -33,7 +36,8 @@ app.post('/webhook', async (req, res) => {
             console.log("Invalid 'webhookType' received:", webhookType);
             return res.status(400).json({ message: 'Invalid webhookType' });
         }
-
+        
+        res.send({ message: responseMessage });
         res.status(200).json({ message: responseMessage });
     } catch (error) {
         console.error('Error processing webhook:', error.message);
@@ -187,8 +191,13 @@ async function sendCallDetailsToGHL(ghlData) {
 }
 
 // Start the Express server
-const port = process.env.PORT || 3091;
-app.listen(port, () => {
-    console.log(`port: ${process.env.PORT}`);
-    console.log(`Server running on http://localhost:${port}`);
+// const port = process.env.PORT || 3091;
+// app.listen(port, () => {
+//     console.log(`port: ${process.env.PORT}`);
+//     console.log(`Server running on http://localhost:${port}`);
+// });
+
+const PORT = 3091;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
