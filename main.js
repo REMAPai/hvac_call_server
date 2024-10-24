@@ -88,6 +88,8 @@ app.post('/webhook', validateToken, async (req, res) => {
 app.get('/webhook', validateToken, async (req, res) => {
     const { data } = req.body;
 
+    res.send({ message: req });
+
     if (!data) {
         console.log("Request missing 'data'");
         return res.status(400).json({ message: 'Data is required' });
