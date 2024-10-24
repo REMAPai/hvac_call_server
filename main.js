@@ -84,10 +84,10 @@ app.post('/webhook', validateToken, async (req, res) => {
     }
 });
 
-// GET handler for testing purposes
-app.get('/webhook', (req, res) => {
-    res.status(200).send('Webhook endpoint is working. Please use POST for webhooks.');
-});
+// // GET handler for testing purposes
+// app.get('/webhook', (req, res) => {
+//     res.status(200).send('Webhook endpoint is working. Please use POST for webhooks.');
+// });
 
 // Handle inbound webhook logic
 async function handleInboundWebhook(data, bearerToken) {
