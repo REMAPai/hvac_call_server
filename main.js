@@ -55,6 +55,8 @@ app.get('/token', (req, res) => {
 // Inbound and Outbound Webhook handler (POST)
 app.post('/webhook', validateToken, async (req, res) => {
     const { data } = req.body;
+    
+    console.log("request body", req.body);
 
     if (!data) {
         console.log("Request missing 'data'");
