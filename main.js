@@ -56,6 +56,8 @@ app.get('/token', (req, res) => {
 app.post('/webhook', validateToken, async (req, res) => {
     const { data } = req.body;
     
+    console.log("request body", req);
+
     console.log("request body", req.body);
 
     if (!data) {
