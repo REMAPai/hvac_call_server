@@ -56,10 +56,6 @@ app.get('/token', (req, res) => {
 app.post('/webhook', validateToken, async (req, res) => {
     const { data } = req.body;
     
-    console.log("request body", req);
-
-    console.log("request body", req.body);
-
     if (!data) {
         console.log("Request missing 'data'");
         return res.status(400).json({ message: 'Data is required' });
@@ -274,7 +270,7 @@ async function getCallDetails(callId) {
 }
 
 // Start the Express server
-const PORT = process.env.PORT || 3000; // Set a default port
+const PORT = process.env.PORT || 80; // Set a default port
 app.listen(PORT, () => {
     console.log(`Server is running on http://api.hvac.remap.ai:${PORT}/webhook`); // Updated URL
 });
