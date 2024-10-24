@@ -89,8 +89,8 @@ app.post('/webhook', validateToken, async (req, res) => {
 //     res.status(200).send('Webhook endpoint is working. Please use POST for webhooks.');
 // });
 
-app.get('/', (req, res) => {
-    res.send('Welcome to the API! Use POST /webhook to send data.');
+app.get('/status', (req, res) => {
+    res.status(200).send('API is running. Use POST /webhook for webhooks.');
 });
 
 // Handle inbound webhook logic
