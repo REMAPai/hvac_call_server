@@ -85,9 +85,36 @@ app.post('/webhook', validateToken, async (req, res) => {
 });
 
 // // GET handler for testing purposes
-// app.get('/webhook', (req, res) => {
-//     res.status(200).send('Webhook endpoint is working. Please use POST for webhooks.');
-// });
+app.get('/webhook', validateToken, async (req, res) => {
+    const { data } = req.body;
+
+    if (!data) {
+        console.log("Request missing 'data'");
+        return res.status(400).json({ message: 'Data is required' });
+    }
+
+    try {
+        let inboundResponse;
+        let outboundResponse;
+
+        // First, handle inbound webhook
+        inboundResponse = await handleInboundWebhook(data, req.user.token); // Pass token to handleInboundWebhook
+
+        console.log("inboundResponse", inboundResponse);
+
+        // Pass the result of handleInboundWebhook to handleOutboundWebhook
+        outboundResponse = await handleOutboundWebhook(inboundResponse);
+
+        console.log("outboundResponse", outboundResponse);
+
+        // Respond with the outbound webhook result
+        console.log('Webhook data processed:', outboundResponse);
+        res.send({ message: outboundResponse });
+    } catch (error) {
+        console.error('Error processing webhook:', error.message);
+        res.status(500).json({ message: 'Failed to process webhook', error: error.message });
+    }
+});
 
 app.get('/status', (req, res) => {
     res.status(200).send('API is running. Use POST /webhook for webhooks.');
