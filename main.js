@@ -11,34 +11,32 @@ const blandApiKey = process.env.BLAND_API_KEY; // Use your .env variable
 const app = express();
 
 app.use(express.json());
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
 // Inbound and Outbound Webhook handler (POST)
 app.post('/webhook', async (req, res) => {
-    const { webhookType, data } = req.body;
+    const { data } = req.body;
 
-    if (!webhookType || !data) {
-        console.log("Request missing 'webhookType' or 'data'");
-        return res.status(400).json({ message: 'webhookType and data are required' });
+    if (!data) {
+        console.log("Request missing 'data'");
+        return res.status(400).json({ message: 'Data is required' });
     }
 
     try {
-        let responseMessage;
-        if (webhookType === 'inbound') {
-            responseMessage = await handleInboundWebhook(data);
-        } else if (webhookType === 'outbound') {
-            responseMessage = await handleOutboundWebhook(data);
-        } else {
-            console.log("Invalid 'webhookType' received:", webhookType);
-            return res.status(400).json({ message: 'Invalid webhookType' });
-        }
-        
-        res.send({ message: responseMessage });
-        res.status(200).json({ message: responseMessage });
+        let inboundResponse;
+        let outboundResponse;
+
+        // First, handle inbound webhook
+        inboundResponse = await handleInboundWebhook(data);
+
+        // Pass the result of handleInboundWebhook to handleOutboundWebhook
+        outboundResponse = await handleOutboundWebhook(inboundResponse);
+
+        // Respond with the outbound webhook result
+        console.log('Webhook data processed:', outboundResponse);
+        res.send({ message: outboundResponse });
     } catch (error) {
         console.error('Error processing webhook:', error.message);
         res.status(500).json({ message: 'Failed to process webhook', error: error.message });
@@ -65,17 +63,23 @@ async function handleInboundWebhook(data) {
     // Trigger a Bland.AI call to the provided phone number
     const lead = { phone: phoneNumber, name: name, email: email };
     const result = await initiateOutboundCall(lead);
-    return result;
+    
+    console.log("result", result);
+
+    return result; // Ensure this includes the callId
 }
 
 // Handle outbound webhook logic
 async function handleOutboundWebhook(data) {
-    const { callId } = data;
+    // Access the call_id from the data
+    const callId = data.call_id;
 
-    // Validate call ID
-    if (!callId) {
-        console.log("Missing 'callId' in outbound webhook data:", data);
-        throw new Error('Call ID is required');
+    // Check if call_id exists
+    if (callId) {
+        console.log("Call ID:", callId);
+        // You can now use the callId for any further logic or actions, such as saving to a database, etc.
+    } else {
+        console.log("No call_id found in the received data.");
     }
 
     console.log("Outbound webhook received:", data);
@@ -97,12 +101,11 @@ async function handleOutboundWebhook(data) {
     };
 
     console.log("Filtered call details:", filteredData);
-
-    return filteredData;
+    return filteredData; // Return the structured call details
 }
 
 // Initiate AI call function with improved error handling
-async function initiateOutboundCall(lead, retries = 3) {
+async function initiateOutboundCall(lead, retries = 1) {
     const phoneNumber = lead.phone;
 
     const task = `
@@ -135,68 +138,62 @@ async function initiateOutboundCall(lead, retries = 3) {
                 },
             });
             console.log("Outbound call initiated successfully:", response.data);
-            return response.data;
+
+            return response.data; // Return the response data that includes callId
         } catch (error) {
             console.error("Error dispatching phone call:", error.response?.data || error.message);
             retries--;
             console.log(`Retrying... Attempts left: ${retries}`);
-            if (retries === 0) {
-                throw new Error("Failed to dispatch phone call after multiple attempts");
-            }
         }
+
+        retries--;
     }
 }
 
-// Helper function to get call details from Bland.AI
+// Helper function to get call details from Bland.AI and wait until the call status is 'Complete'
 async function getCallDetails(callId) {
     const url = `https://api.bland.ai/logs`;
-
-    // Data payload
     const data = { call_id: callId };
 
     try {
-        console.log("Fetching call details for call ID:", callId);
-        const response = await axios.post(url, data, {
-            headers: {
-                authorization: `Bearer ${blandApiKey}`,
-                'Content-Type': 'application/json',
-            }
-        });
+        let callStatus = '';
+        let retries = 10; // Maximum number of attempts before stopping
+        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-        // Return the call details
-        console.log("Call details retrieved:", response.data);
-        return response.data;
+        // Polling the API until the call status becomes 'Complete'
+        while (retries > 0) {
+            console.log("Fetching call details for call ID:", callId);
+            const response = await axios.post(url, data, {
+                headers: {
+                    authorization: `Bearer ${blandApiKey}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const callDetails = response.data;
+            callStatus = callDetails.queue_status; // Assuming 'status' holds the call status
+
+            console.log("Current call status:", callStatus);
+
+            if (callStatus === 'complete' || callStatus === 'completed') {
+                console.log("Call is complete, returning details.");
+                return callDetails; // Return the call details once it's 'Complete'
+            }
+
+            // Wait for some time before the next status check
+            await delay(15000); // Wait for 5 seconds before checking again
+            retries--;
+        }
+
+        throw new Error('Call did not complete within the allowed attempts');
     } catch (error) {
         console.error('Error fetching call details:', error.response?.data || error.message);
         throw new Error('Failed to retrieve call details');
     }
 }
 
-// Function to send call details to GHL
-async function sendCallDetailsToGHL(ghlData) {
-    const ghlWebhookUrl = 'https://ghl-webhook-url.com'; // Replace with actual GHL webhook URL
-
-    try {
-        console.log("Sending call details to GHL:", ghlData);
-        await axios.post(ghlWebhookUrl, ghlData, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        console.log('Call details sent to GHL successfully');
-    } catch (error) {
-        console.error('Error sending call details to GHL:', error.response?.data || error.message);
-        throw new Error('Failed to send call details to GHL');
-    }
-}
 
 // Start the Express server
-// const port = process.env.PORT || 3091;
-// app.listen(port, () => {
-//     console.log(`port: ${process.env.PORT}`);
-//     console.log(`Server running on http://localhost:${port}`);
-// });
-
 const PORT = 3091;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
