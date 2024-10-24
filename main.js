@@ -4,6 +4,7 @@ const path = require('path');
 const axios = require('axios');
 const jwt = require('jsonwebtoken'); // For Bearer Token generation
 require('dotenv').config();
+const CircularJSON = require('circular-json'); // Add the require statement here
 
 const blandApiKey = process.env.BLAND_API_KEY; // Use your .env variable
 const jwtSecret = process.env.JWT_SECRET; // JWT secret for signing token
@@ -79,7 +80,8 @@ app.post('/webhook', validateToken, async (req, res) => {
         console.log('Webhook data processed:', outboundResponse);
         res.send({ message: outboundResponse });
     } catch (error) {
-        console.error('Error processing webhook:', error.message);
+        //console.error('Error processing webhook:', error.message);
+        console.error('Error processing webhook:', CircularJSON.stringify(error)); // Use CircularJSON here to log the error
         res.status(500).json({ message: 'Failed to process webhook', error: error.message });
     }
 });
