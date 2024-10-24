@@ -2,11 +2,13 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const axios = require('axios');
-
-// Load environment variables from .env file
+const jwt = require('jsonwebtoken'); // For Bearer Token generation
 require('dotenv').config();
 
 const blandApiKey = process.env.BLAND_API_KEY; // Use your .env variable
+const jwtSecret = process.env.JWT_SECRET; // JWT secret for signing token
+
+console.log("JWT Secret:", jwtSecret); // Debugging line, can be removed later
 
 const app = express();
 
@@ -15,8 +17,43 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// JWT Bearer Token generation function
+const generateBearerToken = () => {
+    const payload = { service: 'blandAI' }; // Payload for token, modify as needed
+    const options = { expiresIn: '1h' }; // Token valid for 1 hour
+    return jwt.sign(payload, jwtSecret, options); // Sign the token using the secret key
+};
+
+// Middleware to validate JWT
+const validateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Get the token from the Authorization header
+
+    if (!token) {
+        return res.status(403).send('Token is required for authentication');
+    }
+
+    jwt.verify(token, jwtSecret, (err, user) => {
+        if (err) {
+            return res.status(403).send('Invalid token');
+        }
+        req.user = { token }; // Attach the token to the request object
+        next();
+    });
+};
+
+// API endpoint to generate a Bearer Token
+app.get('/token', (req, res) => {
+    try {
+        const token = generateBearerToken();
+        res.json({ token });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to generate token', error: error.message });
+    }
+});
+
 // Inbound and Outbound Webhook handler (POST)
-app.post('/webhook', async (req, res) => {
+app.post('/webhook', validateToken, async (req, res) => {
     const { data } = req.body;
 
     if (!data) {
@@ -29,10 +66,14 @@ app.post('/webhook', async (req, res) => {
         let outboundResponse;
 
         // First, handle inbound webhook
-        inboundResponse = await handleInboundWebhook(data);
+        inboundResponse = await handleInboundWebhook(data, req.user.token); // Pass token to handleInboundWebhook
+
+        console.log("inboundResponse", inboundResponse);
 
         // Pass the result of handleInboundWebhook to handleOutboundWebhook
         outboundResponse = await handleOutboundWebhook(inboundResponse);
+
+        console.log("outboundResponse", outboundResponse);
 
         // Respond with the outbound webhook result
         console.log('Webhook data processed:', outboundResponse);
@@ -49,7 +90,7 @@ app.get('/webhook', (req, res) => {
 });
 
 // Handle inbound webhook logic
-async function handleInboundWebhook(data) {
+async function handleInboundWebhook(data, bearerToken) {
     const { phoneNumber, name, email } = data;
 
     // Validate required fields
@@ -62,8 +103,8 @@ async function handleInboundWebhook(data) {
 
     // Trigger a Bland.AI call to the provided phone number
     const lead = { phone: phoneNumber, name: name, email: email };
-    const result = await initiateOutboundCall(lead);
-    
+    const result = await initiateOutboundCall(lead, bearerToken); // Pass token to initiateOutboundCall
+
     console.log("result", result);
 
     return result; // Ensure this includes the callId
@@ -104,8 +145,8 @@ async function handleOutboundWebhook(data) {
     return filteredData; // Return the structured call details
 }
 
-// Initiate AI call function with improved error handling
-async function initiateOutboundCall(lead, retries = 1) {
+// Initiate AI call function using the passed Bearer Token
+async function initiateOutboundCall(lead, bearerToken, retries = 1) {
     const phoneNumber = lead.phone;
 
     const task = `
@@ -131,8 +172,11 @@ async function initiateOutboundCall(lead, retries = 1) {
     while (retries > 0) {
         try {
             console.log("Initiating outbound call to:", phoneNumber);
+
+            console.log("Bearer Token:", bearerToken);
+
             const response = await axios.post("https://api.bland.ai/call", data, {
-                headers: {
+                 headers: {
                     authorization: `Bearer ${blandApiKey}`,
                     "Content-Type": "application/json",
                 },
@@ -181,7 +225,7 @@ async function getCallDetails(callId) {
             }
 
             // Wait for some time before the next status check
-            await delay(15000); // Wait for 5 seconds before checking again
+            await delay(15000); // Wait for 15 seconds before checking again
             retries--;
         }
 
@@ -192,9 +236,8 @@ async function getCallDetails(callId) {
     }
 }
 
-
 // Start the Express server
-const PORT = 3091;
+const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
