@@ -270,7 +270,7 @@ async function getCallDetails(callId) {
 }
 
 // Start the Express server
-const PORT = process.env.PORT || 3000; // Set a default port
+const PORT = process.env.PORT || 80; // Set a default port
 app.listen(PORT, () => {
     console.log(`Server is running on http://api.hvac.remap.ai:${PORT}/webhook`); // Updated URL
 });
