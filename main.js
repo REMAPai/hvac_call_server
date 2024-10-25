@@ -4,7 +4,10 @@ const path = require('path');
 const axios = require('axios');
 const jwt = require('jsonwebtoken'); // For Bearer Token generation
 require('dotenv').config();
-const CircularJSON = require('circular-json'); // Add the require statement here
+//const CircularJSON = require('circular-json'); // Add the require statement here
+//const { stringify } = require('flatted'); // Use flatted instead of JSON.stringify
+
+const { stringify } = require('flatted');
 
 const blandApiKey = process.env.BLAND_API_KEY; // Use your .env variable
 const jwtSecret = process.env.JWT_SECRET; // JWT secret for signing token
@@ -56,7 +59,8 @@ app.get('/token', (req, res) => {
 // Inbound and Outbound Webhook handler (POST)
 app.post('/webhook', validateToken, async (req, res) => {
     const { data } = req.body;
-    
+
+    // Send a relevant response instead of the entire req object
     if (!data) {
         console.log("Request missing 'data'");
         return res.status(400).json({ message: 'Data is required' });
@@ -66,22 +70,20 @@ app.post('/webhook', validateToken, async (req, res) => {
         let inboundResponse;
         let outboundResponse;
 
-        // First, handle inbound webhook
-        inboundResponse = await handleInboundWebhook(data, req.user.token); // Pass token to handleInboundWebhook
+        // Handle inbound webhook
+        inboundResponse = await handleInboundWebhook(data, req.user.token);
 
         console.log("inboundResponse", inboundResponse);
 
-        // Pass the result of handleInboundWebhook to handleOutboundWebhook
+        // Handle outbound webhook
         outboundResponse = await handleOutboundWebhook(inboundResponse);
 
         console.log("outboundResponse", outboundResponse);
 
         // Respond with the outbound webhook result
-        console.log('Webhook data processed:', outboundResponse);
-        res.send({ message: outboundResponse });
+        res.json({ message: "Webhook processed successfully", data: outboundResponse });
     } catch (error) {
-        //console.error('Error processing webhook:', error.message);
-        console.error('Error processing webhook:', CircularJSON.stringify(error)); // Use CircularJSON here to log the error
+        console.error('Error processing webhook:', error.message);
         res.status(500).json({ message: 'Failed to process webhook', error: error.message });
     }
 });
@@ -272,7 +274,7 @@ async function getCallDetails(callId) {
 }
 
 // Start the Express server
-const PORT = process.env.PORT || 80; // Set a default port
+const PORT = process.env.PORT || 3000; // Set a default port
 app.listen(PORT, () => {
     console.log(`Server is running on http://api.hvac.remap.ai:${PORT}/webhook`); // Updated URL
 });
