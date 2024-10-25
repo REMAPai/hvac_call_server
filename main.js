@@ -16,6 +16,7 @@ console.log("JWT Secret:", jwtSecret); // Debugging line, can be removed later
 
 const app = express();
 
+
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
