@@ -16,7 +16,6 @@ console.log("JWT Secret:", jwtSecret); // Debugging line, can be removed later
 
 const app = express();
 
-
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -82,7 +81,8 @@ app.post('/webhook', validateToken, async (req, res) => {
         console.log("outboundResponse", outboundResponse);
 
         // Respond with the outbound webhook result
-        res.json({ message: "Webhook processed successfully", data: outboundResponse });
+        //res.json({ message: "Webhook processed successfully", data: outboundResponse });
+        res.send({ message: outboundResponse });
     } catch (error) {
         console.error('Error processing webhook:', error.message);
         res.status(500).json({ message: 'Failed to process webhook', error: error.message });
