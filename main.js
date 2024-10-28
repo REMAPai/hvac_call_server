@@ -182,20 +182,34 @@ async function handleOutboundWebhook(data) {
 async function initiateOutboundCall(lead, bearerToken, retries = 1) {
     const phoneNumber = lead.phone;
 
-    const task = `
-        Hello ${lead.name}, this is a call from our service. Please respond with your username and domain for your email.
-        If we don't understand, you can spell each part one character at a time.
+const task = `
+    // Initial Greeting and Verification
+    Hello, ${lead.name}, this is a call from [Company Name]. I’m your AI assistant, here to assist you. 
+    For security, could you confirm your email?
 
-        Bland: Let's start with your username. Please spell it out, one letter at a time. For example, A as in Alpha.
+    // Asking for email (Username and Domain)
+    Please respond with your username and domain for your email.
+    If we don't understand, you can spell each part one character at a time.
 
-        Wait for user input...
+    // Prompt for spelling username
+    Bland: Let's start with your username. Please spell it out, one letter at a time. For example, A as in Alpha.
 
-        Bland: Thank you. Now please spell your domain, such as gmail.com, one letter at a time.
+    Bland: Thank you. Now please spell your domain, such as gmail.com, one letter at a time.
 
-        Wait for user input...
+    Bland: I think I have it. You said {username} at {domain}. Is that correct? Please confirm.
 
-        Bland: I think I have it. You said {username} at {domain}. Is that correct? Please confirm.
-    `;
+    // Qualification Prompt
+    Thank you, ${lead.name}. I see you’re interested in learning more about [Product/Service]. Could I confirm some additional details to ensure we guide you appropriately?
+
+    // Assistance and Issue Resolution
+    I understand you’re looking for support with [specific issue]. Let me gather some details to connect you with the right resources. Can you briefly describe the issue you're experiencing?
+
+    // Escalation to Human Agent
+    Thank you for your patience, ${lead.name}. Based on the information provided, I’ll connect you to a specialized team member who can assist you further. Please hold for a moment.
+
+    // Follow-up and Scheduling
+    We’d like to schedule a follow-up to ensure your issue is resolved. Would you prefer a call on [Date/Time Options]?
+`;
 
     const data = {
         phone_number: phoneNumber,
