@@ -4,10 +4,12 @@ const path = require('path');
 const axios = require('axios');
 const jwt = require('jsonwebtoken'); // For Bearer Token generation
 require('dotenv').config();
+//const CircularJSON = require('circular-json'); // Add the require statement here
+//const { stringify } = require('flatted'); // Use flatted instead of JSON.stringify
+
 const { stringify } = require('flatted');
 
 const blandApiKey = process.env.BLAND_API_KEY; // Use your .env variable
-const openAiApiKey = process.env.OPENAI_API_KEY; // OpenAI API key from .env
 const jwtSecret = process.env.JWT_SECRET; // JWT secret for signing token
 
 console.log("JWT Secret:", jwtSecret); // Debugging line, can be removed later
@@ -182,7 +184,7 @@ async function initiateOutboundCall(lead, bearerToken, retries = 1) {
 
 const task = `
     // Initial Greeting and Verification
-    Hello, ${lead.name}, this is a call from HVAC. I’m here to assist you. 
+    Hello, ${lead.name}, this is a call from [Company Name]. I’m your AI assistant, here to assist you. 
     For security, could you confirm your email?
 
     // Asking for email (Username and Domain)
@@ -281,62 +283,7 @@ async function getCallDetails(callId) {
     }
 }
 
-// API endpoint to generate SMS response
-app.post('/generate-sms', validateToken, async (req, res) => {
-    const { contactNumber, stage, contactName } = req.body;
-
-    if (!contactNumber || !stage) {
-        return res.status(400).json({ message: 'Contact number, name and stage are required' });
-    }
-
-    try {
-        const smsResponse = await generateSmsResponse(contactNumber, stage, contactName);
-        res.json({ sms: smsResponse });
-    } catch (error) {
-        console.error('Error generating SMS response:', error.message);
-        res.status(500).json({ message: 'Failed to generate SMS response', error: error.message });
-    }
-});
-
-// Generate SMS response using OpenAI based on the interaction stage
-async function generateSmsResponse(contactNumber, interactionStage, contactName) {
-    const smsTemplates = {
-        initialCall: `Dear ${contactName}, we attempted to reach you via phone to discuss your recent inquiry. If we were unable to connect, please let us know a convenient time for a follow-up. Thank you.`,
-        followUp: `Dear ${contactName}, this is a follow-up regarding the reminder we sent previously. We would appreciate your feedback or confirmation at your earliest convenience. Thank you for your attention.`,
-        escalation: `Dear ${contactName}, we have made several attempts to reach you regarding this matter. Please respond to this message or contact us directly to resolve this matter promptly. Your cooperation is greatly appreciated.`,
-        finalCall: `Dear ${contactName}, this is our final attempt to contact you regarding your issue. If we do not hear back from you by the end of the day, we may mark your case as unresponsive. We look forward to your prompt reply.`,
-        callClosure: `Dear ${contactName}, thank you for speaking with us today regarding your inquiry. If you have any further questions or require assistance, please do not hesitate to contact us. We appreciate your time.`
-    };
-
-    const message = smsTemplates[interactionStage] || "Default message for contacting user.";
-    
-    // Call OpenAI API to generate SMS response
-    const openAiResponse = await axios.post('https://api.openai.com/v1/chat/completions', {
-        model: "gpt-3.5-turbo", // Specify the model
-        messages: [
-            { role: "system", content: "You are a helpful assistant that generates formal SMS responses." },
-            { role: "user", content: `Generate a formal SMS response for the contact: ${message}` }
-        ]
-    }, {
-        headers: {
-            'Authorization': `Bearer ${openAiApiKey}`, // Use OpenAI API key
-            'Content-Type': 'application/json'
-        }
-    });
-
-    const generatedMessage = openAiResponse.data.choices[0].message.content;
-
-    console.log(`SMS to ${contactNumber}: ${generatedMessage}`);
-
-    const smsReponseData = {
-        contact_no: contactNumber,
-        contact_name: contactName,
-        message: generatedMessage
-    };
-
-    return smsReponseData;
-}
-
+// Start the Express server
 const PORT = process.env.PORT || 80; // Set a default port
 app.listen(PORT, () => {
     console.log(`Server is running on http://api.hvac.remap.ai:${PORT}/webhook`); // Updated URL
