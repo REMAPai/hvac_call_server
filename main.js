@@ -141,6 +141,36 @@ async function handleInboundWebhook(data, bearerToken) {
     return result; // Ensure this includes the callId
 }
 
+// New endpoint to fetch call logs directly using callId
+app.post('/logs', validateToken, async (req, res) => {
+    const { callId } = req.body;  // Get callId from the request body
+
+    console.log("Received callId:", callId);
+
+    if (!callId) {
+        return res.status(400).json({ message: 'Call ID is required' });
+    }
+
+    try {
+        const callDetails = await getCallDetails(callId);
+
+        // Respond with the fetched call details
+        res.json({
+            call_id: callDetails.call_id,
+            call_to: callDetails.to,
+            call_from: callDetails.from,
+            call_status: callDetails.status,
+            call_duration: callDetails.call_length,
+            call_transcript: callDetails.concatenated_transcript,
+            call_summary: callDetails.summary,
+            call_recording: callDetails.recording_url
+        });
+    } catch (error) {
+        console.error('Error fetching call details:', error.message);
+        res.status(500).json({ message: 'Failed to fetch call details', error: error.message });
+    }
+});
+
 // Handle outbound webhook logic
 async function handleOutboundWebhook(data) {
     // Access the call_id from the data
@@ -211,7 +241,9 @@ const task = `
 
     const data = {
         phone_number: phoneNumber,
-        task: task
+        task: task,
+        summarize: true,
+        record: true
     };
 
     while (retries > 0) {
