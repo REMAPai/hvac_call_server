@@ -250,8 +250,6 @@ const task = `
         try {
             console.log("Initiating outbound call to:", phoneNumber);
 
-            console.log("Bearer Token:", bearerToken);
-
             const response = await axios.post("https://api.bland.ai/call", data, {
                  headers: {
                     authorization: `Bearer ${blandApiKey}`,
@@ -294,11 +292,24 @@ async function getCallDetails(callId) {
             const callDetails = response.data;
             callStatus = callDetails.queue_status; // Assuming 'status' holds the call status
 
+            // const callStatus = callDetails.status;
+            const callDuration = callDetails.call_length || 0; // Default to 0 if missing
+
             console.log("Current call status:", callStatus);
 
+            console.log("Current call duration:", callDuration);
+
             if (callStatus === 'complete' || callStatus === 'completed') {
-                console.log("Call is complete, returning details.");
-                return callDetails; // Return the call details once it's 'Complete'
+                if (callDuration === 0) {
+                    console.log("Call duration is 0, marking as 'not_connected'.");
+                    return { ...callDetails, status: 'failed' }; // Custom status for no connection
+                } else if (callDuration < 0.1) {
+                    console.log("Call completed with very short duration, marking as 'did_not_pick_up'.");
+                    return { ...callDetails, status: 'failed' }; // Custom status
+                } else {
+                    console.log("Call is complete and likely answered. Returning details.");
+                    return callDetails; // Return details for valid completed calls
+                }
             }
 
             // Wait for some time before the next status check
