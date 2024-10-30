@@ -303,7 +303,7 @@ async function getCallDetails(callId) {
                 if (callDuration === 0) {
                     console.log("Call duration is 0, marking as 'not_connected'.");
                     return { ...callDetails, status: 'failed' }; // Custom status for no connection
-                } else if (callDuration < 0.1) {
+                } else if (callDuration < 0.8) {
                     console.log("Call completed with very short duration, marking as 'did_not_pick_up'.");
                     return { ...callDetails, status: 'failed' }; // Custom status
                 } else {
