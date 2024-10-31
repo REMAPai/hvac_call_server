@@ -86,34 +86,6 @@ app.post('/webhook', validateToken, async (req, res) => {
     }
 });
 
-// // Inbound and Outbound Webhook handler (POST)
-// app.post('/webhook', validateToken, async (req, res) => {
-//     const { data } = req.body;
-
-//     if (!data) {
-//         console.log("Request missing 'data'");
-//         return res.status(400).json({ message: 'Data is required' });
-//     }
-
-//     try {
-//         let inboundResponse;
-//         let outboundResponse;
-
-//         // First, handle inbound webhook
-//         inboundResponse = await handleInboundWebhook(data);
-
-//         // Pass the result of handleInboundWebhook to handleOutboundWebhook
-//         outboundResponse = await handleOutboundWebhook(inboundResponse);
-
-//         // Respond with the outbound webhook result
-//         console.log('Webhook data processed:', outboundResponse);
-//         res.send({ message: outboundResponse });
-//     } catch (error) {
-//         console.error('Error processing webhook:', error.message);
-//         res.status(500).json({ message: 'Failed to process webhook', error: error.message });
-//     }
-// });
-
 // // GET handler for testing purposes
 app.get('/webhook', validateToken, async (req, res) => {
     const { data } = req.body;
@@ -231,7 +203,8 @@ async function handleOutboundWebhook(data, outboundWebhookUrl) {
         call_recording: callDetails.recording_url
     };
 
-    console.log("Filtered call details:", filteredData);
+    console.log("Filtered call details:", stringify(filteredData));
+    //res.json({ message: stringify(filteredData) });
 
     // Send data to the client's outbound webhook URL
     try {
