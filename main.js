@@ -54,13 +54,17 @@ app.get('/token', (req, res) => {
     }
 });
 
-// Inbound and Outbound Webhook handler (POST)
 app.post('/webhook', validateToken, async (req, res) => {
-    const { data } = req.body;
+    const { data, outbound_webhook_url } = req.body;
 
     if (!data) {
         console.log("Request missing 'data'");
         return res.status(400).json({ message: 'Data is required' });
+    }
+
+    if (!outbound_webhook_url) {
+        console.log("Request missing 'outbound_webhook_url'");
+        return res.status(400).json({ message: 'outbound_webhook_url is required' });
     }
 
     try {
@@ -71,7 +75,7 @@ app.post('/webhook', validateToken, async (req, res) => {
         inboundResponse = await handleInboundWebhook(data);
 
         // Pass the result of handleInboundWebhook to handleOutboundWebhook
-        outboundResponse = await handleOutboundWebhook(inboundResponse);
+        outboundResponse = await handleOutboundWebhook(inboundResponse, outbound_webhook_url);
 
         // Respond with the outbound webhook result
         console.log('Webhook data processed:', outboundResponse);
@@ -81,6 +85,34 @@ app.post('/webhook', validateToken, async (req, res) => {
         res.status(500).json({ message: 'Failed to process webhook', error: error.message });
     }
 });
+
+// // Inbound and Outbound Webhook handler (POST)
+// app.post('/webhook', validateToken, async (req, res) => {
+//     const { data } = req.body;
+
+//     if (!data) {
+//         console.log("Request missing 'data'");
+//         return res.status(400).json({ message: 'Data is required' });
+//     }
+
+//     try {
+//         let inboundResponse;
+//         let outboundResponse;
+
+//         // First, handle inbound webhook
+//         inboundResponse = await handleInboundWebhook(data);
+
+//         // Pass the result of handleInboundWebhook to handleOutboundWebhook
+//         outboundResponse = await handleOutboundWebhook(inboundResponse);
+
+//         // Respond with the outbound webhook result
+//         console.log('Webhook data processed:', outboundResponse);
+//         res.send({ message: outboundResponse });
+//     } catch (error) {
+//         console.error('Error processing webhook:', error.message);
+//         res.status(500).json({ message: 'Failed to process webhook', error: error.message });
+//     }
+// });
 
 // // GET handler for testing purposes
 app.get('/webhook', validateToken, async (req, res) => {
@@ -115,6 +147,7 @@ app.get('/webhook', validateToken, async (req, res) => {
         res.status(500).json({ message: 'Failed to process webhook', error: error.message });
     }
 });
+
 
 app.get('/status', (req, res) => {
     res.status(200).send('API is running. Use POST /webhook for webhooks.');
@@ -171,15 +204,11 @@ app.post('/logs', validateToken, async (req, res) => {
     }
 });
 
-// Handle outbound webhook logic
-async function handleOutboundWebhook(data) {
-    // Access the call_id from the data
+async function handleOutboundWebhook(data, outboundWebhookUrl) {
     const callId = data.call_id;
 
-    // Check if call_id exists
     if (callId) {
         console.log("Call ID:", callId);
-        // You can now use the callId for any further logic or actions, such as saving to a database, etc.
     } else {
         console.log("No call_id found in the received data.");
     }
@@ -194,7 +223,7 @@ async function handleOutboundWebhook(data) {
         call_id: callDetails.call_id,
         call_to: callDetails.to,
         call_from: callDetails.from,
-        call_tag: callDetails.status, // e.g., answered, no answer
+        call_tag: callDetails.status,
         call_status: callDetails.status,
         call_duration: callDetails.call_length,
         call_transcript: callDetails.concatenated_transcript,
@@ -203,8 +232,57 @@ async function handleOutboundWebhook(data) {
     };
 
     console.log("Filtered call details:", filteredData);
-    return filteredData; // Return the structured call details
+
+    // Send data to the client's outbound webhook URL
+    try {
+        const response = await axios.post(outboundWebhookUrl, filteredData, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        console.log("Data sent to outbound webhook URL successfully:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error sending data to outbound webhook URL:", error.message);
+        throw new Error('Failed to send data to outbound webhook URL');
+    }
 }
+
+
+// Handle outbound webhook logic
+// async function handleOutboundWebhook(data) {
+//     // Access the call_id from the data
+//     const callId = data.call_id;
+
+//     // Check if call_id exists
+//     if (callId) {
+//         console.log("Call ID:", callId);
+//         // You can now use the callId for any further logic or actions, such as saving to a database, etc.
+//     } else {
+//         console.log("No call_id found in the received data.");
+//     }
+
+//     console.log("Outbound webhook received:", data);
+
+//     // Get call details from Bland.AI using the call ID
+//     const callDetails = await getCallDetails(callId);
+
+//     // Structure filtered data to send to the endpoint
+//     const filteredData = {
+//         call_id: callDetails.call_id,
+//         call_to: callDetails.to,
+//         call_from: callDetails.from,
+//         call_tag: callDetails.status, // e.g., answered, no answer
+//         call_status: callDetails.status,
+//         call_duration: callDetails.call_length,
+//         call_transcript: callDetails.concatenated_transcript,
+//         call_summary: callDetails.summary,
+//         call_recording: callDetails.recording_url
+//     };
+
+//     console.log("Filtered call details:", filteredData);
+//     return filteredData; // Return the structured call details
+// }
 
 // Initiate AI call function using the passed Bearer Token
 async function initiateOutboundCall(lead, bearerToken, retries = 1) {
