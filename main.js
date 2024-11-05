@@ -87,7 +87,7 @@ app.post('/webhook', validateToken, async (req, res) => {
 });
 
 // // GET handler for testing purposes
-app.get('/webhook', validateToken, async (req, res) => {
+app.get('/webhook', async (req, res) => {
     const { data } = req.body;
 
     res.send({ message: req });
