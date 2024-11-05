@@ -54,7 +54,7 @@ app.get('/token', (req, res) => {
     }
 });
 
-app.post('/webhook', async (req, res) => {
+app.post('/webhook', validateToken, async (req, res) => {
     const { data, outbound_webhook_url } = req.body;
 
     if (!data) {
