@@ -430,16 +430,16 @@ async function getCallDetails(callId) {
             console.log("Current call duration:", callDuration);
 
             if (callStatus === 'complete' || callStatus === 'completed') {
-                if (callDuration === 0) {
-                    console.log("Call duration is 0, marking as 'not_connected'.");
-                    return { ...callDetails, status: 'failed' }; // Custom status for no connection
-                } else if (callDuration < 0.8) {
-                    console.log("Call completed with very short duration, marking as 'did_not_pick_up'.");
-                    return { ...callDetails, status: 'failed' }; // Custom status
-                } else {
-                    console.log("Call is complete and likely answered. Returning details.");
-                    return callDetails; // Return details for valid completed calls
-                }
+            //     if (callDuration === 0) {
+            //         console.log("Call duration is 0, marking as 'not_connected'.");
+            //         return { ...callDetails, status: 'failed' }; // Custom status for no connection
+            //     } else if (callDuration < 0.8) {
+            //         console.log("Call completed with very short duration, marking as 'did_not_pick_up'.");
+            //         return { ...callDetails, status: 'failed' }; // Custom status
+            //     } else {
+            //         console.log("Call is complete and likely answered. Returning details.");
+                     return callDetails; // Return details for valid completed calls
+            //     }
             }
 
             // Wait for some time before the next status check
