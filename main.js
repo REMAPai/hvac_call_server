@@ -262,7 +262,12 @@ async function initiateOutboundCall(lead, bearerToken, retries = 1) {
 
     const task = `
     // Initial Greeting and Verification
-    Hello, ${lead.name}, this is a call from Sababa Services. I’m here to assist you with any questions about how our AI-driven services can help your business. 
+
+    Hello, is this ${lead.name}? // First, wait for confirmation
+    
+    Hi, ${lead.name}, this is a call from Sababa Services. I’m here to assist you with any questions about how our services can help your business. 
+
+    // Verification Process
     To get started, could you please confirm your email for security purposes?
 
     // Asking for email (Username and Domain)
