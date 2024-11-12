@@ -266,21 +266,7 @@ async function initiateOutboundCall(lead, bearerToken, retries = 1) {
     Hello, is this ${lead.name}? // First, wait for confirmation
     
     Hi, ${lead.name}, this is a call from Sababa Services. I’m here to assist you with any questions about how our services can help your business. 
-
-    // Verification Process
-    To get started, could you please confirm your email for security purposes?
-
-    // Asking for email (Username and Domain)
-    Please provide your username and domain for your email. 
-    If you’d like, you can spell each part one character at a time for accuracy.
-
-    // Prompt for spelling username
-    Bland: Let's start with your username. Please spell it out, one letter at a time. For example, A as in Alpha.
-
-    Bland: Thank you. Now please spell your domain, such as gmail.com, one letter at a time.
-
-    Bland: I believe I have it. You mentioned {username} at {domain}. Is that correct? Please confirm.
-
+    
     // Qualification Prompt
     Great, ${lead.name}. I understand you’re interested in learning more about how our AI services can streamline operations and improve efficiency for your business. 
     Could I ask a few questions to ensure we provide you with the most relevant information?
@@ -324,7 +310,7 @@ async function initiateOutboundCall(lead, bearerToken, retries = 1) {
     Streamline your consulting business with Sababa’s AI that pre-qualifies leads, schedules discovery calls, and manages your availability. Let our AI handle the logistics while you focus on delivering expert solutions to your clients. Would this help you optimize your consulting practice?
 
     // In Closing
-    Thank you for your time, ${lead.name}. It was great speaking with you today. I will send you more information via email regarding the topics we discussed. If you have any questions or would like to dive deeper into any of the areas we've mentioned, feel free to reach out to me directly.
+    Thank you for your time, ${lead.name}. It was great speaking with you today. If you have any questions or would like to dive deeper into any of the areas we've mentioned, feel free to reach out to me directly.
 
     Looking forward to working with you!
 `;
