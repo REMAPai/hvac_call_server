@@ -264,7 +264,6 @@ async function initiateOutboundCall(lead, bearerToken, retries = 1) {
 
     // Step 1: Wait and Prompt
     
-    (Wait for 2 seconds of silence)
     If no response, say: "Hello?"
     (Pause briefly after saying "Hello?")
     
