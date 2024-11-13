@@ -261,59 +261,68 @@ async function initiateOutboundCall(lead, bearerToken, retries = 1) {
     const phoneNumber = lead.phone;
 
     const task = `
-    // Initial Greeting and Verification
 
-    Hello, is this ${lead.name}? // First, wait for confirmation
+    // Step 1: Wait and Prompt
     
-    Hi, ${lead.name}, this is a call from Sababa Services. I’m here to assist you with any questions about how our services can help your business. 
+    (Wait for 2 seconds of silence)
+    If no response, say: "Hello?"
+    (Pause briefly after saying "Hello?")
     
+    // Step 2: Confirm User's Name
+    If the user responds with "Hello," then say: "Hello, is this ${lead.name}?" 
+    (Wait for user to respond 'Yes')
+
+    // Step 3: Proceed Based on Confirmation
+    If the user responds with "Yes":
+        "${lead.name}, this is a call from Sababa Services. I’m here to assist you with any questions about how our services can help your business."
+
     // Qualification Prompt
-    Great, ${lead.name}. I understand you’re interested in learning more about how our AI services can streamline operations and improve efficiency for your business. 
+    Great, ${lead.name}. I understand you’re interested in learning more about how our services can streamline operations and improve efficiency for your business. 
     Could I ask a few questions to ensure we provide you with the most relevant information?
 
     // Industry-Specific Prompts
 
     // HVAC
-    Sababa’s AI service ensures you never miss a hot lead or emergency call. It can handle urgent requests 24/7, scheduling technicians for both routine maintenance and those middle-of-the-night AC breakdowns. Would you like more details on how our system can optimize your HVAC business operations?
+    Sababa’s service ensures you never miss a hot lead or emergency call. It can handle urgent requests 24/7, scheduling technicians for both routine maintenance and middle-of-the-night AC breakdowns. Would you like more details on how our system can optimize your HVAC business operations?
 
     // Plumbing
-    For your plumbing business, Sababa's AI triages calls, books appointments, and ensures your team is deployed efficiently, whether it’s for a leaky faucet or a major pipe burst. Would this kind of AI support help streamline your operations?
+    For your plumbing business, Sababa’s solution manages calls, schedules appointments, and ensures your team is deployed efficiently, whether it’s for a minor repair or a major pipe burst. Would this kind of support help streamline your operations?
 
     // Roofing
-    Sababa’s AI service can field inquiries about estimates, schedule inspections, and follow up on quotes, freeing you up to focus on keeping roofs over heads. How would automating these tasks benefit your roofing business?
+    Sababa’s service can manage inquiries for estimates, schedule inspections, and follow up on quotes, allowing you to focus on what you do best. How would automating these tasks benefit your roofing business?
 
     // Electrical
-    Never miss a call again! Sababa’s AI answers customer questions, books installations, and manages your team’s packed schedule of repairs and upgrades. Would you like to learn more about how our AI can help you scale your electrical services?
+    Never miss a call again! Sababa handles customer questions, schedules installations, and organizes your team’s repairs and upgrades. Would you like to learn more about how our services can help scale your electrical business?
 
     // Pool Maintenance
-    Sababa’s AI ensures your pool maintenance business stays on track, handling routine scheduling, chemical inquiries, and emergency calls to keep your customers’ pools crystal clear year-round. Does this sound like something you could benefit from?
+    Sababa ensures your pool maintenance business stays on track, handling scheduling, chemical inquiries, and emergency calls, keeping your clients’ pools clear year-round. Does this sound beneficial for your operations?
 
     // Coaches
-    Sababa empowers your coaching practice by booking sessions, following up with clients, and managing your calendar. This gives you more time to focus on inspiring and guiding your clients to success. Can I show you how this works for your coaching business?
+    Sababa empowers your coaching practice by managing bookings, client follow-ups, and your calendar. This gives you more time to focus on guiding your clients to success. Can I show you how it works for your coaching business?
 
     // Cleaning
-    Keep your cleaning business running smoothly while Sababa handles booking, reschedules, and special requests, ensuring your team stays productive and clients’ spaces stay pristine. Would you like to see how we can help you stay organized?
+    Keep your cleaning business organized while Sababa handles booking, rescheduling, and special requests, ensuring your team stays productive and clients’ spaces stay pristine. Would you like to see how we can help?
 
     // Landscaping
-    Sababa helps cultivate more business for your landscaping company by nurturing leads, scheduling consultations, and managing recurring appointments. Would this AI service help you focus more on creating beautiful outdoor spaces?
+    Sababa nurtures leads, schedules consultations, and manages recurring appointments for your landscaping company. Would this service help you focus on creating beautiful outdoor spaces?
 
     // Pest Control
-    Exterminate communication gaps with Sababa’s AI. It schedules treatments, answers common pest questions, and follows up on recurring service plans, ensuring your customers stay bug-free and satisfied. Does this sound like something that could help grow your pest control business?
+    Sababa schedules treatments, answers pest-related questions, and manages recurring service plans, helping keep your customers satisfied and bug-free. Does this sound like it could help grow your pest control business?
 
     // Interior Design
-    Sababa’s AI helps you design a flawless client experience, discussing project needs, scheduling consultations, and managing your calendar of client meetings and site visits. Would you like to learn how this can make your design business more efficient?
+    Sababa supports a seamless client experience for interior designers, managing project discussions, consultations, and your schedule of client meetings. Would you like to learn how this can make your design business more efficient?
 
     // Contracting
-    Build a stronger business foundation with Sababa’s AI, which manages project inquiries, sets up site visits, and keeps your jobs pipeline full and flowing smoothly. How could this help manage your contracting business?
+    Build a stronger business foundation with Sababa’s support managing project inquiries, site visit scheduling, and job pipelines. How could this help manage your contracting business?
 
     // Consultants
-    Streamline your consulting business with Sababa’s AI that pre-qualifies leads, schedules discovery calls, and manages your availability. Let our AI handle the logistics while you focus on delivering expert solutions to your clients. Would this help you optimize your consulting practice?
+    Streamline your consulting business with Sababa’s pre-qualification for leads, discovery call scheduling, and availability management, allowing you to focus on delivering solutions. Would this help optimize your consulting practice?
 
     // In Closing
     Thank you for your time, ${lead.name}. It was great speaking with you today. If you have any questions or would like to dive deeper into any of the areas we've mentioned, feel free to reach out to me directly.
 
     Looking forward to working with you!
-`;
+`; 
 
     const data = {
         phone_number: phoneNumber,
@@ -340,7 +349,7 @@ async function initiateOutboundCall(lead, bearerToken, retries = 1) {
             retries--;
             console.log(`Retrying... Attempts left: ${retries}`);
         }
-
+        
         retries--;
     }
 }
