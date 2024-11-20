@@ -61,6 +61,21 @@ app.post('/webhook', validateToken, async (req, res) => {
         console.log("Request missing 'data'");
         return res.status(400).json({ message: 'Data is required' });
     }
+    
+    phoneno = data.phoneNumber;
+    
+    // If the phone number is entered without the country code, prepend +1 (US country code)
+    if (!phoneno.startsWith('+1')) {
+        phoneno = '+1' + phoneno;  // Add US country code
+    }
+
+    // Validate that the phone number is in the correct US format (starts with +1 and is 11 digits)
+    const isUSNumber = /^(\+1)[0-9]{10}$/.test(phoneno);
+
+    if (!isUSNumber) {
+        console.log("Phone number is not a valid US number:", phoneno);
+        return res.status(400).json({ message: 'Only US numbers are allowed to receive the call' });
+    }
 
     if (!outbound_webhook_url) {
         console.log("Request missing 'outbound_webhook_url'");
@@ -75,7 +90,7 @@ app.post('/webhook', validateToken, async (req, res) => {
         inboundResponse = await handleInboundWebhook(data);
 
         // Pass the result of handleInboundWebhook to handleOutboundWebhook
-        outboundResponse = await handleOutboundWebhook(inboundResponse, outbound_webhook_url);
+        outboundResponse = await handleOutboundWebhook(inboundResponse, outbound_webhook_url, data.calendarId, data.email);
 
         // Respond with the outbound webhook result
         console.log('Webhook data processed:', outboundResponse);
@@ -127,10 +142,10 @@ app.get('/status', (req, res) => {
 
 // Handle inbound webhook logic
 async function handleInboundWebhook(data, bearerToken) {
-    const { phoneNumber, name, email } = data;
+    const { phoneNumber, name, email, calendarId } = data;
 
     // Validate required fields
-    if (!phoneNumber || !name || !email) {
+    if (!phoneNumber || !name || !email || !calendarId) {
         console.log("Missing required fields in 'data':", data);
         throw new Error('Phone number, name, and email are required');
     }
@@ -138,7 +153,7 @@ async function handleInboundWebhook(data, bearerToken) {
     console.log("Inbound webhook received:", data);
 
     // Trigger a Bland.AI call to the provided phone number
-    const lead = { phone: phoneNumber, name: name, email: email };
+    const lead = { phone: phoneNumber, name: name, email: email, calendarId: calendarId };
     const result = await initiateOutboundCall(lead, bearerToken); // Pass token to initiateOutboundCall
 
     console.log("result", result);
@@ -176,7 +191,7 @@ app.post('/logs', validateToken, async (req, res) => {
     }
 });
 
-async function handleOutboundWebhook(data, outboundWebhookUrl) {
+async function handleOutboundWebhook(data, outboundWebhookUrl, calendarId, email) {
     const callId = data.call_id;
 
     if (callId) {
@@ -200,7 +215,9 @@ async function handleOutboundWebhook(data, outboundWebhookUrl) {
         call_duration: callDetails.call_length,
         call_transcript: callDetails.concatenated_transcript,
         call_summary: callDetails.summary,
-        call_recording: callDetails.recording_url
+        call_recording: callDetails.recording_url,
+        calendar_Id: calendarId,
+        email: email
     };
 
     console.log("Filtered call details:", stringify(filteredData));
